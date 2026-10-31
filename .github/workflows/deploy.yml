@@ -19,7 +19,7 @@ concurrency:
 jobs:
   build-test-deploy:
     name: Test, build and deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
       COMPOSE_PROJECT_NAME: northstar-ci
@@ -67,12 +67,12 @@ jobs:
 
       - name: Save actual CI test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: northstar-ci-results-${{ github.run_id }}
           path: cloud-build-results.json
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 30
 
       - name: Authenticate to AWS using OIDC
         id: aws

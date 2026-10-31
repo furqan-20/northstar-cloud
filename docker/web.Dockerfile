@@ -2,7 +2,9 @@ FROM nginx:stable-alpine
 ARG VCS_REF=development
 LABEL org.opencontainers.image.title="NorthStar web" \
       org.opencontainers.image.revision=$VCS_REF
-ENV APP_UPSTREAM=app:8000 TRUSTED_PROXY_CIDR=127.0.0.1/32
+ENV APP_UPSTREAM=app:8000 TRUSTED_PROXY_CIDR=127.0.0.1/32 \
+    CLIENT_IP_HEADER=X-Forwarded-For
+RUN sed -i 's/worker_processes  auto;/worker_processes  1;/' /etc/nginx/nginx.conf
 COPY docker/default.conf.template /etc/nginx/templates/default.conf.template
 COPY templates/index.html /usr/share/nginx/html/index.html
 COPY static/ /usr/share/nginx/html/static/

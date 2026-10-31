@@ -1,5 +1,10 @@
 # NorthStar implementation notes
 
+These notes describe the original local application. For the added container,
+PostgreSQL, AWS network and deployment architecture, see the current
+[cloud setup and limitations](../infra/README.md). The original notes below are
+retained for reference and do not describe the cloud deployment status.
+
 ## Stack
 
 - Python 3.10+ standard library only.

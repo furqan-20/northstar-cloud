@@ -1,0 +1,441 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "NorthStar network: two public and four private subnets across two AZs.",
+  "Resources": {
+    "Vpc": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.42.0.0/16",
+        "EnableDnsSupport": true,
+        "EnableDnsHostnames": true,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NorthStarCEA"
+          },
+          {
+            "Key": "Name",
+            "Value": "northstar-vpc"
+          }
+        ]
+      }
+    },
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NorthStarCEA"
+          },
+          {
+            "Key": "Name",
+            "Value": "northstar-igw"
+          }
+        ]
+      }
+    },
+    "GatewayAttachment": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "InternetGatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "PublicRoutes": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NorthStarCEA"
+          },
+          {
+            "Key": "Name",
+            "Value": "northstar-public"
+          }
+        ]
+      }
+    },
+    "AppRoutes": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NorthStarCEA"
+          },
+          {
+            "Key": "Name",
+            "Value": "northstar-app-private"
+          }
+        ]
+      }
+    },
+    "DbRoutes": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NorthStarCEA"
+          },
+          {
+            "Key": "Name",
+            "Value": "northstar-db-private"
+          }
+        ]
+      }
+    },
+    "PublicA": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.42.0.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NorthStarCEA"
+          },
+          {
+            "Key": "Name",
+            "Value": "northstar-public-a"
+          }
+        ]
+      }
+    },
+    "PublicAAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PublicA"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRoutes"
+        }
+      }
+    },
+    "PublicB": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.42.1.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NorthStarCEA"
+          },
+          {
+            "Key": "Name",
+            "Value": "northstar-public-b"
+          }
+        ]
+      }
+    },
+    "PublicBAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "PublicB"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRoutes"
+        }
+      }
+    },
+    "AppA": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.42.10.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NorthStarCEA"
+          },
+          {
+            "Key": "Name",
+            "Value": "northstar-app-private-a"
+          }
+        ]
+      }
+    },
+    "AppAAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "AppA"
+        },
+        "RouteTableId": {
+          "Ref": "AppRoutes"
+        }
+      }
+    },
+    "AppB": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.42.11.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NorthStarCEA"
+          },
+          {
+            "Key": "Name",
+            "Value": "northstar-app-private-b"
+          }
+        ]
+      }
+    },
+    "AppBAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "AppB"
+        },
+        "RouteTableId": {
+          "Ref": "AppRoutes"
+        }
+      }
+    },
+    "DbA": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.42.20.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NorthStarCEA"
+          },
+          {
+            "Key": "Name",
+            "Value": "northstar-db-private-a"
+          }
+        ]
+      }
+    },
+    "DbAAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DbA"
+        },
+        "RouteTableId": {
+          "Ref": "DbRoutes"
+        }
+      }
+    },
+    "DbB": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.42.21.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "Project",
+            "Value": "NorthStarCEA"
+          },
+          {
+            "Key": "Name",
+            "Value": "northstar-db-private-b"
+          }
+        ]
+      }
+    },
+    "DbBAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "DbB"
+        },
+        "RouteTableId": {
+          "Ref": "DbRoutes"
+        }
+      }
+    },
+    "PublicDefaultRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PublicRoutes"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        }
+      },
+      "DependsOn": "GatewayAttachment"
+    }
+  },
+  "Outputs": {
+    "VpcId": {
+      "Value": {
+        "Ref": "Vpc"
+      },
+      "Export": {
+        "Name": "northstar-network-VpcId"
+      }
+    },
+    "InternetGatewayId": {
+      "Value": {
+        "Ref": "InternetGateway"
+      },
+      "Export": {
+        "Name": "northstar-network-InternetGatewayId"
+      }
+    },
+    "PublicSubnetA": {
+      "Value": {
+        "Ref": "PublicA"
+      },
+      "Export": {
+        "Name": "northstar-network-PublicSubnetA"
+      }
+    },
+    "PublicSubnetB": {
+      "Value": {
+        "Ref": "PublicB"
+      },
+      "Export": {
+        "Name": "northstar-network-PublicSubnetB"
+      }
+    },
+    "AppSubnetA": {
+      "Value": {
+        "Ref": "AppA"
+      },
+      "Export": {
+        "Name": "northstar-network-AppSubnetA"
+      }
+    },
+    "AppSubnetB": {
+      "Value": {
+        "Ref": "AppB"
+      },
+      "Export": {
+        "Name": "northstar-network-AppSubnetB"
+      }
+    },
+    "DbSubnetA": {
+      "Value": {
+        "Ref": "DbA"
+      },
+      "Export": {
+        "Name": "northstar-network-DbSubnetA"
+      }
+    },
+    "DbSubnetB": {
+      "Value": {
+        "Ref": "DbB"
+      },
+      "Export": {
+        "Name": "northstar-network-DbSubnetB"
+      }
+    },
+    "PublicRouteTableId": {
+      "Value": {
+        "Ref": "PublicRoutes"
+      },
+      "Export": {
+        "Name": "northstar-network-PublicRouteTableId"
+      }
+    },
+    "AppRouteTableId": {
+      "Value": {
+        "Ref": "AppRoutes"
+      },
+      "Export": {
+        "Name": "northstar-network-AppRouteTableId"
+      }
+    },
+    "DbRouteTableId": {
+      "Value": {
+        "Ref": "DbRoutes"
+      },
+      "Export": {
+        "Name": "northstar-network-DbRouteTableId"
+      }
+    }
+  }
+}

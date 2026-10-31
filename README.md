@@ -22,6 +22,13 @@ and deployment steps remain skipped until the AWS account, IAM trust, repositori
 and application service are configured. The workflow summary states this explicitly.
 The first green build must not be described as a successful AWS deployment.
 
+Verified on 31 October 2026: [workflow run 41218715730](https://github.com/furqan-20/northstar-cloud/actions/runs/41218715730)
+passed the original twelve regression checks and twelve Docker/PostgreSQL HTTP
+checks, authenticated through OIDC, and published both images to ECR. Its AWS
+deployment step was skipped. The `northstar-network` VPC stack was subsequently
+created successfully. The remaining hosting services have **not** yet been
+deployed or tested at the time this setup update was prepared.
+
 ## First step: put this source in GitHub
 
 1. Extract the ZIP on Windows. Open the `NorthStar_Cloud` folder.
@@ -71,19 +78,19 @@ definition is still active, and checks the deployed commit via `/healthz`. Faile
 verification requests a return to the previous task definition and fails the run;
 the restoration must itself be checked before claiming recovery completed.
 
-## AWS configuration: a later guided step
+## AWS configuration
 
-The prepared deployment adapter targets ECS. A candidate AWS design is an internet
-facing ALB in public subnets, Nginx and application containers on ECS Fargate in
-private application subnets, and private RDS PostgreSQL in database subnets. Security
-groups permit ALB-to-web and app-to-database traffic only. CloudWatch logs and the
-scaling policy will be configured with the actual AWS resources.
+The [AWS setup guide](infra/README.md) describes the CloudShell provisioning script,
+reviewable CloudFormation template, cost plan, security boundaries and known NFR
+limitations. It uses the existing VPC, two ECS Fargate tasks, an ALB, private RDS
+PostgreSQL, one NAT gateway, Secrets Manager, CloudWatch Logs and CloudFront HTTPS.
+Web and app containers share each task, as permitted by the assignment.
 
-The final service sizes, outbound connectivity and cost estimate must be checked
-against the Free Plan, remaining credits, existing account resources and hosting
-through the evaluation on **20 November 2026**. No AWS resources are created by the
-initial push. This package does not provision the proposed VPC, ALB, database or
-ECS service; those resources have not yet been deployed or tested.
+The initial push creates no AWS resources. `infra/provision.py --plan` performs
+read-only AWS checks. Explicitly running `--deploy` provisions billable hosting,
+initializes the database with a separate owner role, enables the service, checks
+the live URL and adds the GitHub deployment policy. Review the estimated usage
+through the evaluation on **20 November 2026** before running it.
 
 After that setup, configure repository **Actions variables**, not plaintext source
 files, with the actual values:
@@ -101,8 +108,7 @@ files, with the actual values:
 The deployment role needs permission to push only to the two ECR repositories,
 read task definitions, register the required new task revisions, update the specific
 ECS service, and pass only the approved ECS task/execution roles. It does not need
-AdministratorAccess. Service provisioning and OIDC trust will be prepared after the
-repository URL is known.
+AdministratorAccess. The existing main-branch OIDC trust is preserved by the setup.
 
 ## Application configuration
 
@@ -119,6 +125,7 @@ repository URL is known.
 | `NORTHSTAR_TRUST_PROXY` | Set `1` only with the application's ingress restricted to the trusted web tier. |
 | `APP_UPSTREAM` | Nginx target; `app:8000` in Compose, normally `127.0.0.1:8000` when the two containers share a Fargate task. |
 | `TRUSTED_PROXY_CIDR` | Nginx trusts forwarded client IPs only from this CIDR. Set it to the actual ALB network boundary; restrict ingress with security groups too. |
+| `CLIENT_IP_HEADER` | Nginx real-IP header; default `X-Forwarded-For` for Compose, `CloudFront-Viewer-Address` behind the restricted CloudFront/ALB origin. |
 
 `DATABASE_URL` is an alternative PostgreSQL connection string for development and
 testing. Keep it outside the repository. No existing SQLite customer data is imported
@@ -138,6 +145,10 @@ limits write throughput and is a limitation to discuss in the NFR section.
 - `tests/test_deployment_guard.py`: two tests for preserving secret references and
   reporting an ECS rollback as a failed release. These use mocked AWS responses;
   they are not evidence of an actual AWS deployment or recovery.
+- `tests/test_infrastructure_guards.py`: four tests that prevent unmatched image
+  pairs, resolve initial image digests to the tested source revision, and prevent
+  modifications to an IAM role belonging to another project. The current local
+  regression suite totals sixteen tests; the next GitHub run must verify them too.
 - `scripts/smoke.py --full`: twelve HTTP checks against the temporary PostgreSQL,
   Gunicorn and Nginx deployment, including two application containers.
 - `cloud-build-results.json`: actual CI check results, saved as a workflow artifact.
