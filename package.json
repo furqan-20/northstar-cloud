@@ -1,0 +1,9 @@
+{
+  "name": "northstar-local-shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NorthStar local storefront. Python standard library only; no npm dependencies.",
+  "scripts": {
+    "dev": "python3 server.py"
+  }
+}

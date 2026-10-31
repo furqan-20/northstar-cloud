@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#263d32">
+  <meta name="description" content="NorthStar — considered essentials for your workspace, your home and everywhere in between.">
+  <title>NorthStar — Better things. Everyday.</title>
+  <link rel="icon" type="image/svg+xml" href="/static/images/brand.svg">
+  <link rel="preload" href="/static/fonts/Editorial-Regular.otf" as="font" type="font/otf" crossorigin>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="announcement"><span>GOOD DESIGN. EVERYDAY PURPOSE.</span><span>Complimentary delivery on orders over Rs. 8,000 <span aria-hidden="true">↗</span></span><a href="/shipping" data-link>Delivery & returns</a></div>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/" data-link aria-label="NorthStar home"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="m20 1 5.2 13.8L39 20l-13.8 5.2L20 39l-5.2-13.8L1 20l13.8-5.2Z" fill="currentColor"/></svg><span>NORTHSTAR<span class="brand-dot">®</span></span></a>
+      <nav class="desktop-nav" aria-label="Main navigation"><a href="/shop" data-link>Shop all</a><a href="/shop?new=1" data-link>New arrivals <span class="nav-dot"></span></a><a href="/about" data-link>Our story</a><a href="/journal" data-link>The journal</a></nav>
+      <div class="header-actions"><button class="icon-btn" data-action="search-toggle" aria-label="Search products" aria-expanded="false" id="search-toggle"></button><a href="/wishlist" data-link class="icon-btn" aria-label="Wishlist" id="wishlist-link"></a><a href="/account" data-link class="icon-btn" aria-label="My account" id="account-link"></a><a href="/cart" data-link class="cart-link" aria-label="Shopping bag" id="bag-link"><span id="bag-icon"></span><span class="cart-count" id="cart-count">0</span></a><button class="icon-btn menu-toggle" data-action="menu" aria-label="Open navigation" aria-expanded="false" id="menu-toggle"></button></div>
+    </div>
+    <div class="search-panel" id="search-panel" hidden><form id="global-search" role="search"><label class="sr-only" for="global-query">Search the collection</label><input id="global-query" name="q" type="search" placeholder="Find your next everyday favourite…" maxlength="150"><button class="btn btn-dark" type="submit">Search <span aria-hidden="true">↗</span></button></form><p>Try “lamp”, “canvas” or “workspace”.</p></div>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" hidden><a href="/shop" data-link>Shop all</a><a href="/shop?new=1" data-link>New arrivals</a><a href="/wishlist" data-link>Saved items</a><a href="/account" data-link>My account</a><a href="/about" data-link>Our story</a><a href="/journal" data-link>The journal</a><a href="/support" data-link>Help & contact</a></nav>
+  </header>
+  <main id="main" tabindex="-1"><div class="page-loader"><span class="spinner"></span><p>Getting things ready…</p></div></main>
+  <footer class="site-footer">
+    <div class="newsletter"><div><p class="eyebrow">A LITTLE SOMETHING GOOD</p><h2>A better everyday,<br>in your inbox.</h2><p>New finds, thoughtful spaces and the occasional good offer.</p></div><form id="newsletter-form" class="newsletter-form"><label for="newsletter-email">Your email address</label><div class="input-joined"><input id="newsletter-email" name="email" type="email" placeholder="you@example.com" required maxlength="254" autocomplete="email"><button type="submit" aria-label="Subscribe to the newsletter">↗</button></div><div class="form-error" role="alert" hidden></div><p class="fineprint">By subscribing, you agree to our <a href="/privacy" data-link>privacy policy</a>. No clutter, we promise.</p></form></div>
+    <div class="footer-links"><div class="footer-intro"><a href="/" data-link class="brand footer-brand">NORTHSTAR<span class="brand-dot">®</span></a><p>Considered essentials.<br>For work, home and the in-between.</p><span class="location-mark">↗ Thoughtfully selected. Based in Pakistan.</span></div><div><h3>Explore</h3><a href="/shop" data-link>Shop all</a><a href="/shop?category=Workspace" data-link>Workspace</a><a href="/shop?category=Living" data-link>Living</a><a href="/shop?category=Carry" data-link>On the move</a></div><div><h3>Here to help</h3><a href="/support" data-link>Contact & FAQs</a><a href="/shipping" data-link>Delivery & returns</a><a href="/orders" data-link>Your orders</a><a href="/account" data-link>Your account</a></div><div><h3>A little about us</h3><a href="/about" data-link>Our story</a><a href="/journal" data-link>The journal</a><a href="/privacy" data-link>Privacy policy</a><a href="/terms" data-link>Terms of service</a></div></div>
+    <div class="footer-bottom"><span>© 2026 NorthStar. All rights reserved.</span><span>PKR · Pakistan <span aria-hidden="true">◉</span></span><span>Less, but better.</span></div>
+  </footer>
+  <div class="toast-region" id="toasts" aria-live="polite" aria-atomic="false"></div>
+  <dialog id="modal" aria-labelledby="modal-title"><button class="modal-close icon-btn" data-action="close-modal" aria-label="Close dialog">✕</button><div id="modal-content"></div></dialog>
+</body>
+</html>

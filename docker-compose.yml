@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: northstar
+      POSTGRES_USER: northstar_test
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [database]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U northstar_test -d northstar"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  app:
+    image: ${APP_IMAGE:-northstar-app:local}
+    build:
+      context: .
+      args:
+        VCS_REF: ${BUILD_REVISION:-development}
+    environment:
+      NORTHSTAR_DB_HOST: db
+      NORTHSTAR_DB_PORT: "5432"
+      NORTHSTAR_DB_NAME: northstar
+      NORTHSTAR_DB_USER: northstar_test
+      NORTHSTAR_DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      # This network is internal to the CI runner; AWS must use verify-full.
+      NORTHSTAR_DB_SSLMODE: disable
+      NORTHSTAR_TRUST_PROXY: "1"
+      NORTHSTAR_SEED_DEMO: "0"
+    networks: [web, database]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+  web:
+    image: ${WEB_IMAGE:-northstar-web:local}
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      args:
+        VCS_REF: ${BUILD_REVISION:-development}
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      APP_UPSTREAM: app:8000
+    networks: [web]
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+networks:
+  web:
+  database:
+    internal: true
+volumes:
+  pgdata:

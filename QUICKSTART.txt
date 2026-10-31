@@ -1,0 +1,37 @@
+NORTHSTAR — RUN ON YOUR LAPTOP
+============================
+
+1. Extract this ZIP. Open the northstar folder (the folder with server.py).
+2. Open a terminal in that folder.
+3. Run:
+
+   python3 --version
+   python3 server.py
+
+4. Open http://127.0.0.1:8000 in your browser.
+5. Keep the terminal running. Ctrl+C stops the server.
+
+Requires Python 3.10 or later. No pip or npm installation is needed.
+On Windows use: py -3 server.py, or double-click start.bat.
+On Linux/macOS you may also use: bash start.sh
+If port 8000 is busy: python3 server.py --port 8001
+Then use http://127.0.0.1:8001 instead.
+
+CUSTOMER
+Email: alex@northstar.local
+Password: NorthStar123!
+
+ADMINISTRATOR
+Email: admin@northstar.local
+Password: NorthStarAdmin123!
+Admin studio: http://127.0.0.1:8000/admin
+
+First launch creates the database, 20 products and both demo accounts.
+Changes persist between restarts in the instance folder.
+Orders start empty. No payment, email or courier provider is connected.
+
+Promo: WELCOME10 — 10% off a subtotal of Rs. 3,000+, up to Rs. 2,000.
+Delivery: Rs. 250; free at Rs. 8,000+ after discount.
+
+See README.md for the full feature guide and troubleshooting.
+This package contains only the website and documentation; no test suite.

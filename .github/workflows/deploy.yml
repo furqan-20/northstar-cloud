@@ -1,0 +1,141 @@
+name: NorthStar cloud build and deployment
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# AWS must trust only this repository's main-branch subject, never pull requests.
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: northstar-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-test-deploy:
+    name: Test, build and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      COMPOSE_PROJECT_NAME: northstar-ci
+      APP_IMAGE: northstar-app:ci
+      WEB_IMAGE: northstar-web:ci
+      BUILD_REVISION: ${{ github.sha }}
+      AWS_REGION: ${{ vars.AWS_REGION || 'eu-north-1' }}
+
+    steps:
+      - name: Check out the source
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install application dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run application regression tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Create temporary CI database credentials
+        shell: bash
+        run: |
+          password=$(openssl rand -hex 24)
+          echo "::add-mask::$password"
+          echo "POSTGRES_PASSWORD=$password" >> "$GITHUB_ENV"
+
+      - name: Build application and web Docker images
+        run: |
+          docker build --build-arg VCS_REF="$GITHUB_SHA" -t "$APP_IMAGE" -f Dockerfile .
+          docker build --build-arg VCS_REF="$GITHUB_SHA" -t "$WEB_IMAGE" -f docker/web.Dockerfile .
+          docker image inspect "$APP_IMAGE" "$WEB_IMAGE" --format '{{.RepoTags}} {{.Id}}'
+
+      - name: Start PostgreSQL, two application containers and Nginx
+        run: docker compose up -d --no-build --wait --wait-timeout 240 --scale app=2
+
+      - name: Test the running three-tier application
+        run: |
+          python scripts/smoke.py --url http://127.0.0.1:8080 --revision "$GITHUB_SHA" --full
+          docker compose ps
+
+      - name: Save actual CI test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: northstar-ci-results-${{ github.run_id }}
+          path: cloud-build-results.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Authenticate to AWS using OIDC
+        id: aws
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.AWS_ROLE_ARN != ''
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: northstar-${{ github.run_id }}
+
+      - name: Push the tested images to Amazon ECR
+        id: images
+        if: steps.aws.outcome == 'success'
+        env:
+          APP_REPOSITORY: ${{ vars.ECR_APP_REPOSITORY || 'northstar-app' }}
+          WEB_REPOSITORY: ${{ vars.ECR_WEB_REPOSITORY || 'northstar-web' }}
+        run: |
+          account=$(aws sts get-caller-identity --query Account --output text)
+          registry="$account.dkr.ecr.$AWS_REGION.amazonaws.com"
+          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$registry"
+          tag="$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          app_image="$registry/$APP_REPOSITORY:$tag"
+          web_image="$registry/$WEB_REPOSITORY:$tag"
+          docker tag "$APP_IMAGE" "$app_image"
+          docker tag "$WEB_IMAGE" "$web_image"
+          docker push "$app_image"
+          docker push "$web_image"
+          echo "app=$app_image" >> "$GITHUB_OUTPUT"
+          echo "web=$web_image" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy the new ECS task revision and verify the live application
+        id: deployment
+        if: steps.images.outcome == 'success' && vars.ECS_CLUSTER != '' && vars.ECS_SERVICE != '' && vars.APPLICATION_URL != ''
+        env:
+          ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+          ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+          APPLICATION_URL: ${{ vars.APPLICATION_URL }}
+          DEPLOY_APP_IMAGE: ${{ steps.images.outputs.app }}
+          DEPLOY_WEB_IMAGE: ${{ steps.images.outputs.web }}
+        run: |
+          python -m scripts.deploy_ecs \
+            --cluster "$ECS_CLUSTER" --service "$ECS_SERVICE" \
+            --app-image "$DEPLOY_APP_IMAGE" --web-image "$DEPLOY_WEB_IMAGE" \
+            --url "$APPLICATION_URL" --revision "$GITHUB_SHA"
+
+      - name: Record the deployment stage accurately
+        if: success()
+        env:
+          PUBLISH_OUTCOME: ${{ steps.images.outcome }}
+          DEPLOY_OUTCOME: ${{ steps.deployment.outcome }}
+        run: |
+          if [ "$DEPLOY_OUTCOME" = 'success' ]; then
+            echo '### The tested images were published, deployed and checked at the live URL.' >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$PUBLISH_OUTCOME" = 'success' ]; then
+            echo '### Images published; AWS deployment did not run.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo '### CI build and tests completed; AWS publishing and deployment did not run.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Print container logs if a check failed
+        if: failure()
+        run: docker compose logs --no-color --tail=60
+
+      - name: Remove this runner's temporary test containers and database
+        if: always()
+        run: POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-unused-cleanup}" docker compose down --volumes --remove-orphans
