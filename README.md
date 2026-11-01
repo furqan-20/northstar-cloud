@@ -198,3 +198,5 @@ evidence will be completed against the resources actually deployed.
 - https://docs.github.com/en/actions/reference/security/oidc
 - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/PostgreSQL.Concepts.General.SSL.html
 - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html
+
+Live AWS application: https://d2r3cq2i8bhgox.cloudfront.net
