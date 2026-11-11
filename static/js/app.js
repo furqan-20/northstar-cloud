@@ -50,7 +50,7 @@ async function api(url, options={}) {
   return data;
  } catch (err) {
   if (err instanceof RequestError) throw err;
-  throw new RequestError(err.name === 'AbortError' ? 'The request took too long. Please try again.' : 'We couldn’t reach NorthStar. Check your connection and try again.');
+  throw new RequestError(err.name === 'AbortError' ? 'The request took too long. Please try again.' : 'We could not reach NorthStar. Check your connection and try again.');
  } finally { clearTimeout(timer); }
 }
 function remember(products) { products.forEach(p => state.products.set(p.id, p)); return products; }
